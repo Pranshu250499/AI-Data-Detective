@@ -2,15 +2,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import io
-import os
-import tempfile
-
 import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, LabelEncoder
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
@@ -32,40 +29,261 @@ from reportlab.platypus import (
     Spacer,
     Table,
     TableStyle,
-    Image,
     PageBreak
 )
 
 
 # =========================================================
-# PAGE CONFIGURATION
+# PREMIUM PAGE STYLE
 # =========================================================
 
-st.set_page_config(
-    page_title="Report Download",
-    page_icon="📄",
-    layout="wide"
+st.html(
+    """
+    <style>
+
+    .stApp {
+        background:
+            radial-gradient(
+                circle at 8% 8%,
+                rgba(37, 99, 235, 0.14),
+                transparent 27%
+            ),
+            radial-gradient(
+                circle at 92% 12%,
+                rgba(6, 182, 212, 0.11),
+                transparent 25%
+            ),
+            #07111f;
+    }
+
+    [data-testid="stHeader"] {
+        background: transparent !important;
+        box-shadow: none !important;
+        border: none !important;
+    }
+
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+
+    #MainMenu {
+        visibility: hidden;
+    }
+
+    footer {
+        visibility: hidden;
+    }
+
+    .block-container {
+        max-width: 1450px;
+        padding-top: 4.8rem !important;
+        padding-bottom: 3rem !important;
+    }
+
+    .report-hero {
+        padding: 38px 40px;
+        border-radius: 24px;
+        margin-bottom: 28px;
+
+        background:
+            linear-gradient(
+                135deg,
+                rgba(17, 43, 75, 0.98),
+                rgba(8, 25, 46, 0.98)
+            );
+
+        border: 1px solid rgba(56, 189, 248, 0.25);
+
+        box-shadow:
+            0 22px 55px rgba(0, 0, 0, 0.30),
+            inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .report-kicker {
+        color: #38bdf8;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 10px;
+    }
+
+    .report-title {
+        color: #f8fbff;
+        font-size: 42px;
+        line-height: 1.12;
+        font-weight: 850;
+        margin: 0;
+    }
+
+    .report-subtitle {
+        color: #a5b7cb;
+        font-size: 16px;
+        line-height: 1.65;
+        max-width: 900px;
+        margin-top: 13px;
+    }
+
+    .dataset-status {
+        display: flex;
+        align-items: center;
+        gap: 13px;
+
+        padding: 17px 20px;
+        margin-bottom: 25px;
+
+        border-radius: 16px;
+
+        background: rgba(13, 31, 53, 0.85);
+        border: 1px solid rgba(96, 165, 250, 0.16);
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 12px rgba(34, 197, 94, 0.75);
+    }
+
+    .status-small {
+        color: #7f95ad;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .status-file {
+        color: #f1f7ff;
+        font-size: 16px;
+        font-weight: 750;
+        margin-top: 2px;
+    }
+
+    .section-kicker {
+        color: #38bdf8;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 1.6px;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+
+    .section-title {
+        color: #f5f9ff;
+        font-size: 27px;
+        font-weight: 800;
+        margin-bottom: 17px;
+    }
+
+    .insight-card {
+        padding: 15px 18px;
+        margin-bottom: 9px;
+
+        border-radius: 13px;
+
+        background: rgba(13, 30, 51, 0.82);
+        border: 1px solid rgba(96, 165, 250, 0.13);
+
+        color: #dbe8f7;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    .export-card {
+        padding: 24px;
+        border-radius: 20px;
+
+        background:
+            linear-gradient(
+                145deg,
+                rgba(15, 39, 67, 0.98),
+                rgba(8, 25, 45, 0.98)
+            );
+
+        border: 1px solid rgba(56, 189, 248, 0.19);
+
+        box-shadow:
+            0 18px 45px rgba(0, 0, 0, 0.22);
+
+        margin-bottom: 15px;
+    }
+
+    .export-icon {
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+
+    .export-title {
+        color: #f8fbff;
+        font-size: 20px;
+        font-weight: 800;
+    }
+
+    .export-text {
+        color: #99acc2;
+        font-size: 14px;
+        line-height: 1.55;
+        margin-top: 7px;
+    }
+
+    .footer-note {
+        text-align: center;
+        color: #687d96;
+        font-size: 12px;
+
+        margin-top: 38px;
+        padding-top: 20px;
+
+        border-top: 1px solid rgba(148, 163, 184, 0.10);
+    }
+
+    </style>
+    """
 )
-
-st.title("📄 AI Data Detective Report")
-
-st.write(
-    "Generate a professional PDF and Excel report containing "
-    "dataset analysis, visualizations, data quality and "
-    "machine learning results."
-)
-
-st.divider()
 
 
 # =========================================================
-# CHECK DATASET
+# HERO
+# =========================================================
+
+st.html(
+    """
+    <div class="report-hero">
+
+        <div class="report-kicker">
+            AI DATA DETECTIVE / REPORT CENTER
+        </div>
+
+        <div class="report-title">
+            Professional Report Studio
+        </div>
+
+        <div class="report-subtitle">
+            Generate a complete intelligence report containing
+            dataset quality, statistics, insights, visual analysis,
+            and machine learning evaluation.
+        </div>
+
+    </div>
+    """
+)
+
+
+# =========================================================
+# DATASET CHECK
 # =========================================================
 
 if "df" not in st.session_state:
 
     st.warning(
-        "⚠️ Please upload a dataset first from the Upload Data page."
+        "Please upload a dataset first from the Upload Data page."
+    )
+
+    st.info(
+        "Go to Upload Data from the sidebar and upload a CSV or Excel file."
     )
 
     st.stop()
@@ -73,51 +291,124 @@ if "df" not in st.session_state:
 
 df = st.session_state["df"].copy()
 
+file_name = st.session_state.get(
+    "file_name",
+    "Dataset"
+)
+
 
 # =========================================================
-# DATA QUALITY
+# DATASET STATUS
 # =========================================================
 
-rows = df.shape[0]
-columns = df.shape[1]
-duplicates = int(df.duplicated().sum())
-missing_values = int(df.isnull().sum().sum())
+st.html(
+    f"""
+    <div class="dataset-status">
+
+        <div class="status-dot"></div>
+
+        <div>
+            <div class="status-small">
+                Active Dataset
+            </div>
+
+            <div class="status-file">
+                {file_name}
+            </div>
+        </div>
+
+    </div>
+    """
+)
+
+
+# =========================================================
+# DATA QUALITY CALCULATION
+# =========================================================
+
+rows = int(df.shape[0])
+columns = int(df.shape[1])
+
+duplicates = int(
+    df.duplicated().sum()
+)
+
+missing_values = int(
+    df.isnull().sum().sum()
+)
 
 total_cells = rows * columns
 
 if total_cells > 0:
+
     data_quality = (
         100
-        - ((missing_values + duplicates) / total_cells * 100)
+        -
+        (
+            (missing_values + duplicates)
+            / total_cells
+            * 100
+        )
     )
 
-    data_quality = max(0, min(100, data_quality))
+    data_quality = max(
+        0,
+        min(100, data_quality)
+    )
+
 else:
+
     data_quality = 100
 
 
 # =========================================================
-# DASHBOARD
+# DATASET OVERVIEW
 # =========================================================
 
-st.header("📊 Dataset Overview")
+st.html(
+    """
+    <div class="section-kicker">
+        DATASET INTELLIGENCE
+    </div>
+
+    <div class="section-title">
+        Dataset Overview
+    </div>
+    """
+)
+
 
 c1, c2, c3, c4, c5 = st.columns(5)
 
 with c1:
-    st.metric("Rows", rows)
+    st.metric(
+        "Rows",
+        f"{rows:,}"
+    )
 
 with c2:
-    st.metric("Columns", columns)
+    st.metric(
+        "Columns",
+        f"{columns:,}"
+    )
 
 with c3:
-    st.metric("Duplicates", duplicates)
+    st.metric(
+        "Duplicates",
+        f"{duplicates:,}"
+    )
 
 with c4:
-    st.metric("Missing Values", missing_values)
+    st.metric(
+        "Missing Values",
+        f"{missing_values:,}"
+    )
 
 with c5:
-    st.metric("Data Quality", f"{data_quality:.1f}%")
+    st.metric(
+        "Data Quality",
+        f"{data_quality:.1f}%"
+    )
 
 
 st.divider()
@@ -127,26 +418,59 @@ st.divider()
 # DATA PREVIEW
 # =========================================================
 
-st.header("👀 Dataset Preview")
+st.html(
+    """
+    <div class="section-kicker">
+        DATA EXPLORER
+    </div>
+
+    <div class="section-title">
+        Dataset Preview
+    </div>
+    """
+)
 
 st.dataframe(
     df.head(10),
-    use_container_width=True
+    use_container_width=True,
+    hide_index=True
 )
 
 
+# =========================================================
+# STATISTICAL SUMMARY
+# =========================================================
+
 st.divider()
 
+st.html(
+    """
+    <div class="section-kicker">
+        STATISTICAL ENGINE
+    </div>
 
-# =========================================================
-# STATISTICS
-# =========================================================
+    <div class="section-title">
+        Statistical Summary
+    </div>
+    """
+)
 
-st.header("📈 Statistical Summary")
+try:
 
-statistics = df.describe(
-    include="all"
-).fillna("")
+    statistics = (
+        df.describe(
+            include="all"
+        )
+        .fillna("")
+    )
+
+except Exception:
+
+    statistics = (
+        df.describe()
+        .fillna("")
+    )
+
 
 st.dataframe(
     statistics,
@@ -154,111 +478,23 @@ st.dataframe(
 )
 
 
-st.divider()
-
-
-# =========================================================
-# VISUALIZATIONS
-# =========================================================
-
-st.header("📊 Automatic Visualizations")
-
-numeric_columns = df.select_dtypes(
-    include=np.number
-).columns.tolist()
-
-
-# ---------------------------------------------------------
-# NUMERIC DISTRIBUTION
-# ---------------------------------------------------------
-
-if numeric_columns:
-
-    selected_numeric = st.selectbox(
-        "Select numerical column",
-        numeric_columns
-    )
-
-    fig1, ax1 = plt.subplots()
-
-    ax1.hist(
-        df[selected_numeric].dropna(),
-        bins=10
-    )
-
-    ax1.set_title(
-        f"Distribution of {selected_numeric}"
-    )
-
-    ax1.set_xlabel(
-        selected_numeric
-    )
-
-    ax1.set_ylabel(
-        "Frequency"
-    )
-
-    st.pyplot(fig1)
-
-    plt.close(fig1)
-
-
-# ---------------------------------------------------------
-# CORRELATION
-# ---------------------------------------------------------
-
-if len(numeric_columns) >= 2:
-
-    st.subheader("🔗 Correlation Matrix")
-
-    correlation = df[numeric_columns].corr()
-
-    fig2, ax2 = plt.subplots(
-        figsize=(8, 6)
-    )
-
-    image = ax2.imshow(
-        correlation,
-        aspect="auto"
-    )
-
-    ax2.set_xticks(
-        range(len(correlation.columns))
-    )
-
-    ax2.set_xticklabels(
-        correlation.columns,
-        rotation=45,
-        ha="right"
-    )
-
-    ax2.set_yticks(
-        range(len(correlation.columns))
-    )
-
-    ax2.set_yticklabels(
-        correlation.columns
-    )
-
-    ax2.set_title(
-        "Feature Correlation Matrix"
-    )
-
-    fig2.colorbar(image)
-
-    st.pyplot(fig2)
-
-    plt.close(fig2)
-
-
-st.divider()
-
-
 # =========================================================
 # AUTOMATIC INSIGHTS
 # =========================================================
 
-st.header("🤖 Automatic Data Insights")
+st.divider()
+
+st.html(
+    """
+    <div class="section-kicker">
+        AI INSIGHT ENGINE
+    </div>
+
+    <div class="section-title">
+        Automatic Data Insights
+    </div>
+    """
+)
 
 insights = []
 
@@ -268,7 +504,7 @@ insights = []
 if missing_values == 0:
 
     insights.append(
-        "✅ The dataset contains no missing values."
+        "The dataset contains no missing values."
     )
 
 else:
@@ -276,13 +512,18 @@ else:
     missing_columns = (
         df.isnull()
         .sum()
-        .loc[lambda x: x > 0]
+    )
+
+    missing_columns = (
+        missing_columns[
+            missing_columns > 0
+        ]
     )
 
     for column, count in missing_columns.items():
 
         insights.append(
-            f"⚠️ {column} contains {count} missing value(s)."
+            f"{column} contains {int(count)} missing value(s)."
         )
 
 
@@ -291,74 +532,123 @@ else:
 if duplicates > 0:
 
     insights.append(
-        f"⚠️ The dataset contains {duplicates} duplicate row(s)."
+        f"The dataset contains {duplicates} duplicate row(s)."
     )
 
 else:
 
     insights.append(
-        "✅ No duplicate rows were detected."
+        "No duplicate rows were detected."
     )
 
 
 # Numeric insights
 
-if "Marks" in df.columns:
-
-    marks_mean = df["Marks"].mean()
-
-    insights.append(
-        f"📈 Average Marks: {marks_mean:.2f}"
+numeric_columns = (
+    df.select_dtypes(
+        include=np.number
     )
+    .columns
+    .tolist()
+)
 
 
-if "Attendance" in df.columns:
+for column in numeric_columns[:6]:
 
-    attendance_mean = df["Attendance"].mean()
+    try:
 
-    insights.append(
-        f"📊 Average Attendance: {attendance_mean:.2f}%"
-    )
+        mean_value = df[column].mean()
 
+        if pd.notna(mean_value):
 
-if "Study_Hours" in df.columns:
+            insights.append(
+                f"Average {column}: {mean_value:.2f}"
+            )
 
-    study_mean = df["Study_Hours"].mean()
+    except Exception:
 
-    insights.append(
-        f"📚 Average Study Hours: {study_mean:.2f}"
-    )
+        pass
 
 
 for insight in insights:
 
-    st.write(insight)
+    st.html(
+        f"""
+        <div class="insight-card">
+            {insight}
+        </div>
+        """
+    )
 
 
-st.divider()
+# =========================================================
+# CORRELATION ANALYSIS
+# =========================================================
+
+if len(numeric_columns) >= 2:
+
+    st.divider()
+
+    st.html(
+        """
+        <div class="section-kicker">
+            RELATIONSHIP ANALYSIS
+        </div>
+
+        <div class="section-title">
+            Feature Correlation
+        </div>
+        """
+    )
+
+    correlation = (
+        df[numeric_columns]
+        .corr()
+    )
+
+    st.dataframe(
+        correlation.round(3),
+        use_container_width=True
+    )
+
+else:
+
+    correlation = None
 
 
 # =========================================================
 # MACHINE LEARNING
 # =========================================================
 
-st.header("🧠 Machine Learning Analysis")
+st.divider()
+
+st.html(
+    """
+    <div class="section-kicker">
+        PREDICTIVE ANALYTICS
+    </div>
+
+    <div class="section-title">
+        Machine Learning Analysis
+    </div>
+    """
+)
 
 ml_results = None
+
 
 if "Placement" in df.columns:
 
     st.info(
         "Placement detected as the target column. "
-        "The report will evaluate a Logistic Regression "
-        "classification model."
+        "A Logistic Regression classification model "
+        "will be evaluated."
     )
 
     ml_df = df.copy()
 
     target = "Placement"
 
-    # Remove rows where target is missing
     ml_df = ml_df.dropna(
         subset=[target]
     )
@@ -369,7 +659,9 @@ if "Placement" in df.columns:
 
     y = ml_df[target].astype(str)
 
+
     # Remove identifier columns
+
     remove_columns = []
 
     for column in X.columns:
@@ -381,50 +673,55 @@ if "Placement" in df.columns:
             "customer_id"
         ]:
 
-            remove_columns.append(column)
+            remove_columns.append(
+                column
+            )
+
 
     X = X.drop(
         columns=remove_columns,
         errors="ignore"
     )
 
-    if y.nunique() >= 2 and len(ml_df) >= 6:
 
-        numeric_features = X.select_dtypes(
-            include=np.number
-        ).columns.tolist()
+    if (
+        y.nunique() >= 2
+        and len(ml_df) >= 6
+        and len(X.columns) > 0
+    ):
 
-        categorical_features = X.select_dtypes(
-            exclude=np.number
-        ).columns.tolist()
-
-        numeric_pipeline = Pipeline([
-            (
-                "imputer",
-                SimpleImputer(
-                    strategy="median"
-                )
+        numeric_features = (
+            X.select_dtypes(
+                include=np.number
             )
-        ])
+            .columns
+            .tolist()
+        )
 
-        categorical_pipeline = Pipeline([
-            (
-                "imputer",
-                SimpleImputer(
-                    strategy="most_frequent"
-                )
-            ),
-            (
-                "encoder",
-                OneHotEncoder(
-                    handle_unknown="ignore"
-                )
+        categorical_features = (
+            X.select_dtypes(
+                exclude=np.number
             )
-        ])
+            .columns
+            .tolist()
+        )
+
 
         transformers = []
 
+
         if numeric_features:
+
+            numeric_pipeline = Pipeline(
+                [
+                    (
+                        "imputer",
+                        SimpleImputer(
+                            strategy="median"
+                        )
+                    )
+                ]
+            )
 
             transformers.append(
                 (
@@ -434,7 +731,25 @@ if "Placement" in df.columns:
                 )
             )
 
+
         if categorical_features:
+
+            categorical_pipeline = Pipeline(
+                [
+                    (
+                        "imputer",
+                        SimpleImputer(
+                            strategy="most_frequent"
+                        )
+                    ),
+                    (
+                        "encoder",
+                        OneHotEncoder(
+                            handle_unknown="ignore"
+                        )
+                    )
+                ]
+            )
 
             transformers.append(
                 (
@@ -444,122 +759,150 @@ if "Placement" in df.columns:
                 )
             )
 
-        preprocessor = ColumnTransformer(
-            transformers=transformers
-        )
 
-        model = Pipeline([
-            (
-                "preprocessor",
-                preprocessor
-            ),
-            (
-                "classifier",
-                LogisticRegression(
-                    max_iter=1000
-                )
-            )
-        ])
+        if transformers:
 
-        try:
-
-            X_train, X_test, y_train, y_test = train_test_split(
-                X,
-                y,
-                test_size=0.20,
-                random_state=42,
-                stratify=y
+            preprocessor = ColumnTransformer(
+                transformers=transformers
             )
 
-            model.fit(
-                X_train,
-                y_train
+
+            model = Pipeline(
+                [
+                    (
+                        "preprocessor",
+                        preprocessor
+                    ),
+                    (
+                        "classifier",
+                        LogisticRegression(
+                            max_iter=1000
+                        )
+                    )
+                ]
             )
 
-            predictions = model.predict(
-                X_test
-            )
 
-            accuracy = accuracy_score(
-                y_test,
-                predictions
-            )
+            try:
 
-            classes = sorted(
-                y.unique()
-            )
-
-            matrix = confusion_matrix(
-                y_test,
-                predictions,
-                labels=classes
-            )
-
-            ml_results = {
-                "target": target,
-                "algorithm": "Logistic Regression",
-                "accuracy": accuracy,
-                "classes": classes,
-                "matrix": matrix,
-                "y_test": y_test,
-                "predictions": predictions
-            }
-
-            m1, m2, m3 = st.columns(3)
-
-            with m1:
-
-                st.metric(
-                    "Target",
-                    target
+                X_train, X_test, y_train, y_test = (
+                    train_test_split(
+                        X,
+                        y,
+                        test_size=0.20,
+                        random_state=42,
+                        stratify=y
+                    )
                 )
 
-            with m2:
 
-                st.metric(
-                    "Algorithm",
-                    "Logistic Regression"
+                model.fit(
+                    X_train,
+                    y_train
                 )
 
-            with m3:
 
-                st.metric(
-                    "Accuracy",
-                    f"{accuracy * 100:.2f}%"
+                predictions = model.predict(
+                    X_test
                 )
 
-            st.subheader(
-                "Confusion Matrix"
-            )
 
-            st.dataframe(
-                pd.DataFrame(
-                    matrix,
-                    index=classes,
-                    columns=classes
+                accuracy = accuracy_score(
+                    y_test,
+                    predictions
                 )
-            )
 
-            st.subheader(
-                "Classification Report"
-            )
 
-            report = classification_report(
-                y_test,
-                predictions,
-                output_dict=True,
-                zero_division=0
-            )
+                classes = sorted(
+                    y.unique()
+                )
 
-            st.dataframe(
-                pd.DataFrame(report).transpose()
-            )
 
-        except Exception as error:
+                matrix = confusion_matrix(
+                    y_test,
+                    predictions,
+                    labels=classes
+                )
 
-            st.warning(
-                f"ML evaluation could not be completed: {error}"
-            )
+
+                ml_results = {
+                    "target": target,
+                    "algorithm": "Logistic Regression",
+                    "accuracy": accuracy,
+                    "classes": classes,
+                    "matrix": matrix,
+                    "y_test": y_test,
+                    "predictions": predictions
+                }
+
+
+                m1, m2, m3 = st.columns(3)
+
+
+                with m1:
+
+                    st.metric(
+                        "Target",
+                        target
+                    )
+
+
+                with m2:
+
+                    st.metric(
+                        "Algorithm",
+                        "Logistic Regression"
+                    )
+
+
+                with m3:
+
+                    st.metric(
+                        "Accuracy",
+                        f"{accuracy * 100:.2f}%"
+                    )
+
+
+                st.subheader(
+                    "Confusion Matrix"
+                )
+
+                st.dataframe(
+                    pd.DataFrame(
+                        matrix,
+                        index=classes,
+                        columns=classes
+                    ),
+                    use_container_width=True
+                )
+
+
+                st.subheader(
+                    "Classification Report"
+                )
+
+
+                report = classification_report(
+                    y_test,
+                    predictions,
+                    output_dict=True,
+                    zero_division=0
+                )
+
+
+                st.dataframe(
+                    pd.DataFrame(
+                        report
+                    ).transpose(),
+                    use_container_width=True
+                )
+
+
+            except Exception as error:
+
+                st.warning(
+                    f"ML evaluation could not be completed: {error}"
+                )
 
     else:
 
@@ -571,25 +914,58 @@ else:
 
     st.info(
         "No Placement column was detected. "
-        "Machine Learning results will not be included."
+        "Machine Learning results will not be included "
+        "in the generated report."
     )
-
-
-st.divider()
 
 
 # =========================================================
 # EXCEL REPORT
 # =========================================================
 
-st.header("📊 Excel Report")
+st.divider()
+
+st.html(
+    """
+    <div class="section-kicker">
+        EXPORT CENTER
+    </div>
+
+    <div class="section-title">
+        Excel Report
+    </div>
+
+    <div class="export-card">
+
+        <div class="export-icon">
+            XLSX
+        </div>
+
+        <div class="export-title">
+            Excel Intelligence Workbook
+        </div>
+
+        <div class="export-text">
+            Includes the complete dataset, statistics,
+            missing-value analysis, data-quality metrics,
+            column information, correlation analysis and
+            machine-learning results when available.
+        </div>
+
+    </div>
+    """
+)
+
 
 excel_buffer = io.BytesIO()
+
 
 with pd.ExcelWriter(
     excel_buffer,
     engine="openpyxl"
 ) as writer:
+
+    # Dataset
 
     df.to_excel(
         writer,
@@ -597,18 +973,31 @@ with pd.ExcelWriter(
         index=False
     )
 
+
+    # Statistics
+
     statistics.to_excel(
         writer,
         sheet_name="Statistics"
     )
 
-    missing_df = pd.DataFrame({
-        "Column": df.columns,
-        "Missing Values": [
-            int(df[column].isnull().sum())
-            for column in df.columns
-        ]
-    })
+
+    # Missing Values
+
+    missing_df = pd.DataFrame(
+        {
+            "Column": df.columns,
+            "Missing Values": [
+                int(
+                    df[column]
+                    .isnull()
+                    .sum()
+                )
+                for column in df.columns
+            ]
+        }
+    )
+
 
     missing_df.to_excel(
         writer,
@@ -616,22 +1005,28 @@ with pd.ExcelWriter(
         index=False
     )
 
-    quality_df = pd.DataFrame({
-        "Metric": [
-            "Rows",
-            "Columns",
-            "Duplicates",
-            "Missing Values",
-            "Data Quality"
-        ],
-        "Value": [
-            rows,
-            columns,
-            duplicates,
-            missing_values,
-            f"{data_quality:.2f}%"
-        ]
-    })
+
+    # Data Quality
+
+    quality_df = pd.DataFrame(
+        {
+            "Metric": [
+                "Rows",
+                "Columns",
+                "Duplicates",
+                "Missing Values",
+                "Data Quality"
+            ],
+            "Value": [
+                rows,
+                columns,
+                duplicates,
+                missing_values,
+                f"{data_quality:.2f}%"
+            ]
+        }
+    )
+
 
     quality_df.to_excel(
         writer,
@@ -639,22 +1034,77 @@ with pd.ExcelWriter(
         index=False
     )
 
+
+    # Column Information
+
+    column_info = pd.DataFrame(
+        {
+            "Column": df.columns,
+            "Data Type": [
+                str(
+                    df[column].dtype
+                )
+                for column in df.columns
+            ],
+            "Missing Values": [
+                int(
+                    df[column]
+                    .isnull()
+                    .sum()
+                )
+                for column in df.columns
+            ],
+            "Unique Values": [
+                int(
+                    df[column]
+                    .nunique()
+                )
+                for column in df.columns
+            ]
+        }
+    )
+
+
+    column_info.to_excel(
+        writer,
+        sheet_name="Column Information",
+        index=False
+    )
+
+
+    # Correlation
+
+    if correlation is not None:
+
+        correlation.to_excel(
+            writer,
+            sheet_name="Correlation"
+        )
+
+
+    # Machine Learning
+
     if ml_results is not None:
 
-        ml_df_report = pd.DataFrame({
-            "Metric": [
-                "Target",
-                "Algorithm",
-                "Accuracy"
-            ],
-            "Value": [
-                ml_results["target"],
-                ml_results["algorithm"],
-                f"{ml_results['accuracy'] * 100:.2f}%"
-            ]
-        })
+        ml_report = pd.DataFrame(
+            {
+                "Metric": [
+                    "Target",
+                    "Algorithm",
+                    "Accuracy"
+                ],
+                "Value": [
+                    ml_results["target"],
+                    ml_results["algorithm"],
+                    (
+                        f"{ml_results['accuracy'] * 100:.2f}%"
+                    )
+                ]
+            }
+        )
 
-        ml_df_report.to_excel(
+
+        ml_report.to_excel(
             writer,
             sheet_name="Machine Learning",
             index=False
@@ -663,14 +1113,16 @@ with pd.ExcelWriter(
 
 excel_buffer.seek(0)
 
+
 st.download_button(
-    label="📊 Download Excel Report",
+    label="Download Excel Report",
     data=excel_buffer,
     file_name="AI_Data_Detective_Report.xlsx",
     mime=(
         "application/vnd.openxmlformats-officedocument."
         "spreadsheetml.sheet"
-    )
+    ),
+    use_container_width=True
 )
 
 
@@ -678,9 +1130,13 @@ st.download_button(
 # PDF GENERATOR
 # =========================================================
 
-def generate_pdf(dataframe, ml_results):
+def generate_pdf(
+    dataframe,
+    ml_results
+):
 
     pdf_buffer = io.BytesIO()
+
 
     document = SimpleDocTemplate(
         pdf_buffer,
@@ -691,45 +1147,82 @@ def generate_pdf(dataframe, ml_results):
         bottomMargin=35
     )
 
+
     styles = getSampleStyleSheet()
 
+
     title_style = ParagraphStyle(
-        "Title",
+        "ReportTitle",
         parent=styles["Title"],
         alignment=TA_CENTER,
         fontSize=24,
-        spaceAfter=10
+        leading=30,
+        textColor=colors.HexColor(
+            "#123B66"
+        ),
+        spaceAfter=8
     )
 
+
     subtitle_style = ParagraphStyle(
-        "Subtitle",
-        parent=styles["Heading2"],
+        "ReportSubtitle",
+        parent=styles["BodyText"],
         alignment=TA_CENTER,
-        fontSize=13,
+        fontSize=11,
+        leading=16,
+        textColor=colors.HexColor(
+            "#64748B"
+        ),
         spaceAfter=25
     )
 
+
     heading_style = ParagraphStyle(
-        "Heading",
+        "ReportHeading",
         parent=styles["Heading2"],
         fontSize=16,
+        leading=20,
+        textColor=colors.HexColor(
+            "#123B66"
+        ),
         spaceBefore=12,
         spaceAfter=10
     )
 
+
     normal_style = ParagraphStyle(
-        "Normal",
+        "ReportNormal",
         parent=styles["BodyText"],
         fontSize=9,
-        leading=13
+        leading=13,
+        textColor=colors.HexColor(
+            "#334155"
+        )
     )
+
+
+    small_style = ParagraphStyle(
+        "ReportSmall",
+        parent=styles["BodyText"],
+        fontSize=7,
+        leading=9,
+        textColor=colors.HexColor(
+            "#475569"
+        )
+    )
+
 
     elements = []
 
 
     # =====================================================
-    # TITLE
+    # COVER / TITLE
     # =====================================================
+
+    elements.append(
+        Spacer(1, 45)
+    )
+
 
     elements.append(
         Paragraph(
@@ -737,6 +1230,7 @@ def generate_pdf(dataframe, ml_results):
             title_style
         )
     )
+
 
     elements.append(
         Paragraph(
@@ -746,16 +1240,102 @@ def generate_pdf(dataframe, ml_results):
     )
 
 
+    elements.append(
+        Spacer(1, 15)
+    )
+
+
+    cover_data = [
+        ["Report Information", "Value"],
+        ["Dataset", str(file_name)],
+        ["Rows", str(rows)],
+        ["Columns", str(columns)],
+        ["Data Quality", f"{data_quality:.2f}%"]
+    ]
+
+
+    cover_table = Table(
+        cover_data,
+        colWidths=[250, 190]
+    )
+
+
+    cover_table.setStyle(
+        TableStyle(
+            [
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    colors.HexColor("#123B66")
+                ),
+                (
+                    "TEXTCOLOR",
+                    (0, 0),
+                    (-1, 0),
+                    colors.white
+                ),
+                (
+                    "FONTNAME",
+                    (0, 0),
+                    (-1, 0),
+                    "Helvetica-Bold"
+                ),
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    0.4,
+                    colors.HexColor("#CBD5E1")
+                ),
+                (
+                    "ROWBACKGROUNDS",
+                    (0, 1),
+                    (-1, -1),
+                    [
+                        colors.white,
+                        colors.HexColor("#F8FAFC")
+                    ]
+                )
+            ]
+        )
+    )
+
+
+    elements.append(
+        cover_table
+    )
+
+
+    elements.append(
+        Spacer(1, 35)
+    )
+
+
+    elements.append(
+        Paragraph(
+            "Generated by AI Data Detective",
+            small_style
+        )
+    )
+
+
+    elements.append(
+        PageBreak()
+    )
+
+
     # =====================================================
-    # OVERVIEW
+    # DATASET OVERVIEW
     # =====================================================
 
     elements.append(
         Paragraph(
-            "📊 Dataset Overview",
+            "Dataset Overview",
             heading_style
         )
     )
+
 
     overview = [
         ["Metric", "Value"],
@@ -763,53 +1343,71 @@ def generate_pdf(dataframe, ml_results):
         ["Columns", str(columns)],
         ["Duplicates", str(duplicates)],
         ["Missing Values", str(missing_values)],
-        ["Data Quality", f"{data_quality:.2f}%"]
+        [
+            "Data Quality",
+            f"{data_quality:.2f}%"
+        ]
     ]
+
 
     overview_table = Table(
         overview,
         colWidths=[280, 160]
     )
 
+
     overview_table.setStyle(
-        TableStyle([
-            (
-                "BACKGROUND",
-                (0, 0),
-                (-1, 0),
-                colors.HexColor("#2E4057")
-            ),
-            (
-                "TEXTCOLOR",
-                (0, 0),
-                (-1, 0),
-                colors.white
-            ),
-            (
-                "FONTNAME",
-                (0, 0),
-                (-1, 0),
-                "Helvetica-Bold"
-            ),
-            (
-                "GRID",
-                (0, 0),
-                (-1, -1),
-                0.5,
-                colors.grey
-            ),
-            (
-                "ALIGN",
-                (1, 1),
-                (1, -1),
-                "CENTER"
-            )
-        ])
+        TableStyle(
+            [
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    colors.HexColor("#123B66")
+                ),
+                (
+                    "TEXTCOLOR",
+                    (0, 0),
+                    (-1, 0),
+                    colors.white
+                ),
+                (
+                    "FONTNAME",
+                    (0, 0),
+                    (-1, 0),
+                    "Helvetica-Bold"
+                ),
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    0.4,
+                    colors.HexColor("#CBD5E1")
+                ),
+                (
+                    "ALIGN",
+                    (1, 1),
+                    (1, -1),
+                    "CENTER"
+                ),
+                (
+                    "ROWBACKGROUNDS",
+                    (0, 1),
+                    (-1, -1),
+                    [
+                        colors.white,
+                        colors.HexColor("#F8FAFC")
+                    ]
+                )
+            ]
+        )
     )
+
 
     elements.append(
         overview_table
     )
+
 
     elements.append(
         Spacer(1, 20)
@@ -822,18 +1420,21 @@ def generate_pdf(dataframe, ml_results):
 
     elements.append(
         Paragraph(
-            "🔍 Data Quality Analysis",
+            "Data Quality Analysis",
             heading_style
         )
     )
 
+
     quality_text = (
-        f"The dataset contains {rows} rows and {columns} columns. "
-        f"There are {duplicates} duplicate rows and "
+        f"The dataset contains {rows} rows and "
+        f"{columns} columns. There are "
+        f"{duplicates} duplicate rows and "
         f"{missing_values} missing values. "
         f"The calculated data quality score is "
         f"{data_quality:.2f}%."
     )
+
 
     elements.append(
         Paragraph(
@@ -841,6 +1442,7 @@ def generate_pdf(dataframe, ml_results):
             normal_style
         )
     )
+
 
     elements.append(
         Spacer(1, 15)
@@ -853,188 +1455,65 @@ def generate_pdf(dataframe, ml_results):
 
     elements.append(
         Paragraph(
-            "📋 Column Information",
+            "Column Information",
             heading_style
         )
     )
 
+
     column_data = [
-        ["Column", "Data Type"]
+        [
+            "Column",
+            "Data Type",
+            "Missing",
+            "Unique"
+        ]
     ]
+
 
     for column in dataframe.columns:
 
-        column_data.append([
-            str(column),
-            str(dataframe[column].dtype)
-        ])
+        column_data.append(
+            [
+                str(column),
+                str(dataframe[column].dtype),
+                str(
+                    int(
+                        dataframe[column]
+                        .isnull()
+                        .sum()
+                    )
+                ),
+                str(
+                    int(
+                        dataframe[column]
+                        .nunique()
+                    )
+                )
+            ]
+        )
+
 
     column_table = Table(
         column_data,
-        colWidths=[280, 160],
+        colWidths=[
+            210,
+            90,
+            70,
+            70
+        ],
         repeatRows=1
     )
+
 
     column_table.setStyle(
-        TableStyle([
-            (
-                "BACKGROUND",
-                (0, 0),
-                (-1, 0),
-                colors.HexColor("#2E4057")
-            ),
-            (
-                "TEXTCOLOR",
-                (0, 0),
-                (-1, 0),
-                colors.white
-            ),
-            (
-                "FONTNAME",
-                (0, 0),
-                (-1, 0),
-                "Helvetica-Bold"
-            ),
-            (
-                "GRID",
-                (0, 0),
-                (-1, -1),
-                0.5,
-                colors.grey
-            )
-        ])
-    )
-
-    elements.append(
-        column_table
-    )
-
-    elements.append(
-        Spacer(1, 20)
-    )
-
-
-    # =====================================================
-    # DATA PREVIEW
-    # =====================================================
-
-    elements.append(
-        Paragraph(
-            "👀 Data Preview",
-            heading_style
-        )
-    )
-
-    preview = dataframe.head(8).copy()
-
-    preview = preview.fillna(
-        "Missing"
-    ).astype(str)
-
-    preview_data = [
-        list(preview.columns)
-    ]
-
-    preview_data.extend(
-        preview.values.tolist()
-    )
-
-    preview_table = Table(
-        preview_data,
-        repeatRows=1
-    )
-
-    preview_table.setStyle(
-        TableStyle([
-            (
-                "BACKGROUND",
-                (0, 0),
-                (-1, 0),
-                colors.HexColor("#2E4057")
-            ),
-            (
-                "TEXTCOLOR",
-                (0, 0),
-                (-1, 0),
-                colors.white
-            ),
-            (
-                "FONTNAME",
-                (0, 0),
-                (-1, 0),
-                "Helvetica-Bold"
-            ),
-            (
-                "GRID",
-                (0, 0),
-                (-1, -1),
-                0.3,
-                colors.grey
-            ),
-            (
-                "FONTSIZE",
-                (0, 0),
-                (-1, -1),
-                6
-            )
-        ])
-    )
-
-    elements.append(
-        preview_table
-    )
-
-    elements.append(
-        PageBreak()
-    )
-
-
-    # =====================================================
-    # STATISTICS
-    # =====================================================
-
-    elements.append(
-        Paragraph(
-            "📈 Statistical Analysis",
-            heading_style
-        )
-    )
-
-    numeric_df = dataframe.select_dtypes(
-        include=np.number
-    )
-
-    if not numeric_df.empty:
-
-        stats = numeric_df.describe().round(2)
-
-        stats_data = [
-            ["Statistic"] +
-            list(stats.columns)
-        ]
-
-        for index in stats.index:
-
-            stats_data.append(
-                [str(index)] +
-                [
-                    str(value)
-                    for value in stats.loc[index]
-                ]
-            )
-
-        stats_table = Table(
-            stats_data,
-            repeatRows=1
-        )
-
-        stats_table.setStyle(
-            TableStyle([
+        TableStyle(
+            [
                 (
                     "BACKGROUND",
                     (0, 0),
                     (-1, 0),
-                    colors.HexColor("#2E4057")
+                    colors.HexColor("#123B66")
                 ),
                 (
                     "TEXTCOLOR",
@@ -1053,7 +1532,7 @@ def generate_pdf(dataframe, ml_results):
                     (0, 0),
                     (-1, -1),
                     0.3,
-                    colors.grey
+                    colors.HexColor("#CBD5E1")
                 ),
                 (
                     "FONTSIZE",
@@ -1061,11 +1540,216 @@ def generate_pdf(dataframe, ml_results):
                     (-1, -1),
                     7
                 )
-            ])
+            ]
         )
+    )
+
+
+    elements.append(
+        column_table
+    )
+
+
+    elements.append(
+        Spacer(1, 20)
+    )
+
+
+    # =====================================================
+    # DATA PREVIEW
+    # =====================================================
+
+    elements.append(
+        Paragraph(
+            "Data Preview",
+            heading_style
+        )
+    )
+
+
+    preview = (
+        dataframe
+        .head(8)
+        .copy()
+        .fillna("Missing")
+        .astype(str)
+    )
+
+
+    preview_data = [
+        [
+            str(column)
+            for column in preview.columns
+        ]
+    ]
+
+
+    preview_data.extend(
+        preview.values.tolist()
+    )
+
+
+    preview_table = Table(
+        preview_data,
+        repeatRows=1
+    )
+
+
+    preview_table.setStyle(
+        TableStyle(
+            [
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    colors.HexColor("#123B66")
+                ),
+                (
+                    "TEXTCOLOR",
+                    (0, 0),
+                    (-1, 0),
+                    colors.white
+                ),
+                (
+                    "FONTNAME",
+                    (0, 0),
+                    (-1, 0),
+                    "Helvetica-Bold"
+                ),
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    0.3,
+                    colors.HexColor("#CBD5E1")
+                ),
+                (
+                    "FONTSIZE",
+                    (0, 0),
+                    (-1, -1),
+                    6
+                )
+            ]
+        )
+    )
+
+
+    elements.append(
+        preview_table
+    )
+
+
+    elements.append(
+        PageBreak()
+    )
+
+
+    # =====================================================
+    # STATISTICS
+    # =====================================================
+
+    elements.append(
+        Paragraph(
+            "Statistical Analysis",
+            heading_style
+        )
+    )
+
+
+    numeric_df = dataframe.select_dtypes(
+        include=np.number
+    )
+
+
+    if not numeric_df.empty:
+
+        stats = (
+            numeric_df
+            .describe()
+            .round(2)
+        )
+
+
+        stats_data = [
+            ["Statistic"]
+            +
+            [
+                str(column)
+                for column in stats.columns
+            ]
+        ]
+
+
+        for index in stats.index:
+
+            stats_data.append(
+                [
+                    str(index)
+                ]
+                +
+                [
+                    str(value)
+                    for value in stats.loc[index]
+                ]
+            )
+
+
+        stats_table = Table(
+            stats_data,
+            repeatRows=1
+        )
+
+
+        stats_table.setStyle(
+            TableStyle(
+                [
+                    (
+                        "BACKGROUND",
+                        (0, 0),
+                        (-1, 0),
+                        colors.HexColor("#123B66")
+                    ),
+                    (
+                        "TEXTCOLOR",
+                        (0, 0),
+                        (-1, 0),
+                        colors.white
+                    ),
+                    (
+                        "FONTNAME",
+                        (0, 0),
+                        (-1, 0),
+                        "Helvetica-Bold"
+                    ),
+                    (
+                        "GRID",
+                        (0, 0),
+                        (-1, -1),
+                        0.3,
+                        colors.HexColor("#CBD5E1")
+                    ),
+                    (
+                        "FONTSIZE",
+                        (0, 0),
+                        (-1, -1),
+                        7
+                    )
+                ]
+            )
+        )
+
 
         elements.append(
             stats_table
+        )
+
+    else:
+
+        elements.append(
+            Paragraph(
+                "No numeric columns were available.",
+                normal_style
+            )
         )
 
 
@@ -1080,60 +1764,86 @@ def generate_pdf(dataframe, ml_results):
 
     elements.append(
         Paragraph(
-            "🔍 Missing Value Analysis",
+            "Missing Value Analysis",
             heading_style
         )
     )
 
+
     missing_data = [
-        ["Column", "Missing Values"]
+        [
+            "Column",
+            "Missing Values"
+        ]
     ]
+
 
     for column in dataframe.columns:
 
-        missing_data.append([
-            str(column),
-            str(int(dataframe[column].isnull().sum()))
-        ])
+        missing_data.append(
+            [
+                str(column),
+                str(
+                    int(
+                        dataframe[column]
+                        .isnull()
+                        .sum()
+                    )
+                )
+            ]
+        )
+
 
     missing_table = Table(
         missing_data,
+        colWidths=[320, 120],
         repeatRows=1
     )
 
+
     missing_table.setStyle(
-        TableStyle([
-            (
-                "BACKGROUND",
-                (0, 0),
-                (-1, 0),
-                colors.HexColor("#2E4057")
-            ),
-            (
-                "TEXTCOLOR",
-                (0, 0),
-                (-1, 0),
-                colors.white
-            ),
-            (
-                "FONTNAME",
-                (0, 0),
-                (-1, 0),
-                "Helvetica-Bold"
-            ),
-            (
-                "GRID",
-                (0, 0),
-                (-1, -1),
-                0.5,
-                colors.grey
-            )
-        ])
+        TableStyle(
+            [
+                (
+                    "BACKGROUND",
+                    (0, 0),
+                    (-1, 0),
+                    colors.HexColor("#123B66")
+                ),
+                (
+                    "TEXTCOLOR",
+                    (0, 0),
+                    (-1, 0),
+                    colors.white
+                ),
+                (
+                    "FONTNAME",
+                    (0, 0),
+                    (-1, 0),
+                    "Helvetica-Bold"
+                ),
+                (
+                    "GRID",
+                    (0, 0),
+                    (-1, -1),
+                    0.4,
+                    colors.HexColor("#CBD5E1")
+                ),
+                (
+                    "ALIGN",
+                    (1, 1),
+                    (1, -1),
+                    "CENTER"
+                )
+            ]
+        )
     )
+
 
     elements.append(
         missing_table
     )
+
 
     elements.append(
         PageBreak()
@@ -1146,10 +1856,11 @@ def generate_pdf(dataframe, ml_results):
 
     elements.append(
         Paragraph(
-            "🧠 Machine Learning Analysis",
+            "Machine Learning Analysis",
             heading_style
         )
     )
+
 
     if ml_results is not None:
 
@@ -1157,63 +1868,75 @@ def generate_pdf(dataframe, ml_results):
             ["Metric", "Result"],
             [
                 "Target",
-                ml_results["target"]
+                str(
+                    ml_results["target"]
+                )
             ],
             [
                 "Algorithm",
-                ml_results["algorithm"]
+                str(
+                    ml_results["algorithm"]
+                )
             ],
             [
                 "Accuracy",
-                f"{ml_results['accuracy'] * 100:.2f}%"
+                (
+                    f"{ml_results['accuracy'] * 100:.2f}%"
+                )
             ]
         ]
+
 
         ml_table = Table(
             ml_data,
             colWidths=[280, 160]
         )
 
+
         ml_table.setStyle(
-            TableStyle([
-                (
-                    "BACKGROUND",
-                    (0, 0),
-                    (-1, 0),
-                    colors.HexColor("#2E4057")
-                ),
-                (
-                    "TEXTCOLOR",
-                    (0, 0),
-                    (-1, 0),
-                    colors.white
-                ),
-                (
-                    "FONTNAME",
-                    (0, 0),
-                    (-1, 0),
-                    "Helvetica-Bold"
-                ),
-                (
-                    "GRID",
-                    (0, 0),
-                    (-1, -1),
-                    0.5,
-                    colors.grey
-                )
-            ])
+            TableStyle(
+                [
+                    (
+                        "BACKGROUND",
+                        (0, 0),
+                        (-1, 0),
+                        colors.HexColor("#123B66")
+                    ),
+                    (
+                        "TEXTCOLOR",
+                        (0, 0),
+                        (-1, 0),
+                        colors.white
+                    ),
+                    (
+                        "FONTNAME",
+                        (0, 0),
+                        (-1, 0),
+                        "Helvetica-Bold"
+                    ),
+                    (
+                        "GRID",
+                        (0, 0),
+                        (-1, -1),
+                        0.4,
+                        colors.HexColor("#CBD5E1")
+                    )
+                ]
+            )
         )
+
 
         elements.append(
             ml_table
         )
+
 
         elements.append(
             Spacer(1, 20)
         )
 
 
-        # Confusion matrix
+        # Confusion Matrix
 
         elements.append(
             Paragraph(
@@ -1222,88 +1945,107 @@ def generate_pdf(dataframe, ml_results):
             )
         )
 
+
         classes = ml_results["classes"]
+
         matrix = ml_results["matrix"]
 
+
         cm_data = [
-            ["Actual / Predicted"] +
-            [str(c) for c in classes]
+            ["Actual / Predicted"]
+            +
+            [
+                str(c)
+                for c in classes
+            ]
         ]
+
 
         for i, class_name in enumerate(classes):
 
             cm_data.append(
-                [str(class_name)] +
+                [
+                    str(class_name)
+                ]
+                +
                 [
                     str(value)
                     for value in matrix[i]
                 ]
             )
 
+
         cm_table = Table(
             cm_data,
             repeatRows=1
         )
 
+
         cm_table.setStyle(
-            TableStyle([
-                (
-                    "BACKGROUND",
-                    (0, 0),
-                    (-1, 0),
-                    colors.HexColor("#2E4057")
-                ),
-                (
-                    "TEXTCOLOR",
-                    (0, 0),
-                    (-1, 0),
-                    colors.white
-                ),
-                (
-                    "FONTNAME",
-                    (0, 0),
-                    (-1, 0),
-                    "Helvetica-Bold"
-                ),
-                (
-                    "GRID",
-                    (0, 0),
-                    (-1, -1),
-                    0.5,
-                    colors.grey
-                ),
-                (
-                    "ALIGN",
-                    (0, 0),
-                    (-1, -1),
-                    "CENTER"
-                )
-            ])
+            TableStyle(
+                [
+                    (
+                        "BACKGROUND",
+                        (0, 0),
+                        (-1, 0),
+                        colors.HexColor("#123B66")
+                    ),
+                    (
+                        "TEXTCOLOR",
+                        (0, 0),
+                        (-1, 0),
+                        colors.white
+                    ),
+                    (
+                        "FONTNAME",
+                        (0, 0),
+                        (-1, 0),
+                        "Helvetica-Bold"
+                    ),
+                    (
+                        "GRID",
+                        (0, 0),
+                        (-1, -1),
+                        0.4,
+                        colors.HexColor("#CBD5E1")
+                    ),
+                    (
+                        "ALIGN",
+                        (0, 0),
+                        (-1, -1),
+                        "CENTER"
+                    )
+                ]
+            )
         )
+
 
         elements.append(
             cm_table
         )
 
+
         elements.append(
             Spacer(1, 25)
         )
 
+
         elements.append(
             Paragraph(
-                "The current dataset contains a very small number "
-                "of records, so the reported accuracy should be "
-                "interpreted as a demonstration of the ML pipeline "
-                "rather than a production-quality performance estimate.",
-                normal_style
+                "The reported accuracy should be interpreted "
+                "in the context of the available dataset size "
+                "and test split.",
+                small_style
             )
         )
+
 
     else:
 
         elements.append(
             Paragraph(
-                "No machine learning results were available.",
+                "No machine learning results were available "
+                "for this dataset.",
                 normal_style
             )
         )
@@ -1320,29 +2062,33 @@ def generate_pdf(dataframe, ml_results):
 
     elements.append(
         Paragraph(
-            "🤖 Final Conclusion",
+            "Final Conclusion",
             heading_style
         )
     )
 
+
     conclusion = (
-        f"The AI Data Detective analyzed a dataset containing "
-        f"{rows} rows and {columns} columns. "
-        f"The analysis identified {duplicates} duplicate rows "
-        f"and {missing_values} missing values. "
+        f"The AI Data Detective analyzed a dataset "
+        f"containing {rows} rows and {columns} columns. "
+        f"The analysis identified {duplicates} duplicate "
+        f"rows and {missing_values} missing values. "
         f"The calculated data quality score was "
-        f"{data_quality:.2f}%. "
+        f"{data_quality:.2f}%."
     )
+
 
     if ml_results is not None:
 
         conclusion += (
-            f"A {ml_results['algorithm']} model was evaluated "
-            f"using {ml_results['target']} as the target variable, "
-            f"achieving an accuracy of "
+            f" A {ml_results['algorithm']} model was "
+            f"evaluated using {ml_results['target']} "
+            f"as the target variable, achieving an "
+            f"accuracy of "
             f"{ml_results['accuracy'] * 100:.2f}% "
             f"on the test split."
         )
+
 
     elements.append(
         Paragraph(
@@ -1351,21 +2097,26 @@ def generate_pdf(dataframe, ml_results):
         )
     )
 
+
     elements.append(
         Spacer(1, 30)
     )
 
+
     elements.append(
         Paragraph(
             "Generated by AI Data Detective",
-            normal_style
+            small_style
         )
     )
 
 
+    # BUILD
+
     document.build(
         elements
     )
+
 
     pdf_buffer.seek(0)
 
@@ -1378,28 +2129,88 @@ def generate_pdf(dataframe, ml_results):
 
 st.divider()
 
-st.header("📄 Professional PDF Report")
+st.html(
+    """
+    <div class="section-kicker">
+        DOCUMENT GENERATOR
+    </div>
+
+    <div class="section-title">
+        Professional PDF Report
+    </div>
+
+    <div class="export-card">
+
+        <div class="export-icon">
+            PDF
+        </div>
+
+        <div class="export-title">
+            AI Data Detective Professional Report
+        </div>
+
+        <div class="export-text">
+            Generate a professional multi-page PDF containing
+            dataset overview, data quality, column information,
+            preview, statistics, missing values, machine learning
+            evaluation and final analytical conclusion.
+        </div>
+
+    </div>
+    """
+)
+
 
 if st.button(
-    "🚀 Generate Professional PDF"
+    "Generate Professional PDF",
+    type="primary",
+    use_container_width=True
 ):
 
     with st.spinner(
-        "Generating professional report..."
+        "Generating your professional report..."
     ):
 
-        pdf_file = generate_pdf(
-            df,
-            ml_results
-        )
+        try:
 
-        st.success(
-            "✅ Professional PDF generated successfully!"
-        )
+            pdf_file = generate_pdf(
+                df,
+                ml_results
+            )
 
-        st.download_button(
-            label="📥 Download Professional PDF",
-            data=pdf_file,
-            file_name="AI_Data_Detective_Professional_Report.pdf",
-            mime="application/pdf"
-        )
+
+            st.success(
+                "Professional PDF generated successfully!"
+            )
+
+
+            st.download_button(
+                label="Download Professional PDF",
+                data=pdf_file,
+                file_name=(
+                    "AI_Data_Detective_"
+                    "Professional_Report.pdf"
+                ),
+                mime="application/pdf",
+                use_container_width=True
+            )
+
+
+        except Exception as error:
+
+            st.error(
+                f"PDF generation failed: {error}"
+            )
+
+
+# =========================================================
+# FOOTER
+# =========================================================
+
+st.html(
+    """
+    <div class="footer-note">
+        AI Data Detective • Automated Data Intelligence Platform
+    </div>
+    """
+)

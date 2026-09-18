@@ -8,4 +8,4 @@ openpyxl
 reportlab
 jupyter
 python-dotenv
-
+supabase

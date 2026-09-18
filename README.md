@@ -1,3 +1,18 @@
+<div align="center">
+
+<img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&size=28&duration=3000&pause=1000&color=00BFFF&center=true&vCenter=true&width=700&lines=Hi%2C+I'm+Pranshu+Kumar+Singh;Passionate+Developer+%F0%9F%92%BB;Java+%7C+C+%7C+Python+%F0%9F%90%8D;Learning+DSA+%26+Artificial+Intelligence+%F0%9F%A4%96;Building+Projects+Every+Day+%F0%9F%9A%80" alt="Typing SVG" />
+
+<br>
+
+### 💻 Passionate Developer | 🚀 Problem Solver | 📚 Lifelong Learner
+
+<img src="https://komarev.com/ghpvc/?username=Pranshu250499&label=Profile%20Views&color=0e75b6&style=for-the-badge" alt="Profile Views" />
+
+</div>
+
+---
+
+## 🚀 About Me
 # 🔎 AI Data Detective
 
 AI Data Detective is an intelligent data analysis application built with Python and Streamlit.
